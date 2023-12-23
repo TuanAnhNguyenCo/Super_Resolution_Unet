@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torchvision
 
 class FirstFeature(nn.Module):
     def __init__(self, in_channels, out_channels):
@@ -64,11 +65,11 @@ class FinalOutput(nn.Module):
         return self.conv(x)
     
 class Unet(nn.Module):
-    def __init__(self, n_channels=3, n_classes=3, features=[64, 128, 256, 512,1024],type = None):
+    def __init__(self, n_channels=3, n_classes=3, features=[64, 128, 256, 512,1024],type = None,LOW_IMG_HEIGHT = 64):
         super(Unet, self).__init__()
         self.n_channels = n_channels
         self.n_classes = n_classes
-        
+        self.resize = torchvision.transforms.Resize((LOW_IMG_HEIGHT*4,LOW_IMG_HEIGHT*4),antialias=True)
         self.in_conv1 = FirstFeature(n_channels,features[0])
         self.in_conv2 = ConvBlock(features[0],features[0])
         self.encoder_block1 = EncoderBlock(features[0],features[1])
@@ -83,6 +84,7 @@ class Unet(nn.Module):
         
         self.out_conv = FinalOutput(features[0],n_classes,type=type)
     def forward(self, x):
+        x = self.resize(x)
         x = self.in_conv1(x)
         x1 = self.in_conv2(x)
         x2 = self.encoder_block1(x1)
